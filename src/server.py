@@ -30,10 +30,19 @@ def main():
     while True:
         try:
             message = receiver.recv_json(flags=zmq.NOBLOCK)
+
             player_id = message.get("player_id")
             direction = message.get("direction")
+            action = message.get("action")
 
-            if direction in ["w", "a", "s", "d"]:
+            if action == "quit":
+                print("Human quit. Resetting game...")
+                game = GameState()
+                game.add_player(Player("human", "Human", "H", 0, 0))
+                game.add_player(Player("bot1", "Bot 1", "B", 10, 10))
+                game.add_player(Player("bot2", "Bot 2", "C", 15, 15))
+
+            elif direction in ["w", "a", "s", "d"]:
                 game.apply_move(player_id, direction)
 
         except zmq.Again:

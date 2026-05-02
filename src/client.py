@@ -62,6 +62,10 @@ def main():
         move = input("Enter move: ").lower()
 
         if move == "q":
+            sender.send_json({
+                "player_id": "human",
+                "action": "quit"
+            })
             print("Client closed.")
             break
 
