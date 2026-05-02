@@ -24,7 +24,6 @@ def render_state(state):
         grid[player["y"]][player["x"]] = player["symbol"]
 
     print("====== GOLD MINER ======")
-
     print("+" + "---" * GRID_SIZE + "+")
 
     for row in grid:
@@ -39,7 +38,7 @@ def render_state(state):
     for player in state["players"].values():
         print(f'{player["name"]}: {player["score"]}')
 
-    print("\nMove: W/A/S/D | Quit: Q")
+    print("\nControls: W/A/S/D then Enter | Q then Enter to quit")
 
 
 def main():
@@ -47,8 +46,9 @@ def main():
 
     sender = context.socket(zmq.PUSH)
     sender.connect(f"tcp://{SERVER_HOST}:{PUSH_PORT}")
-
+    
     subscriber = context.socket(zmq.SUB)
+    subscriber.setsockopt(zmq.CONFLATE, 1)
     subscriber.connect(f"tcp://{SERVER_HOST}:{SUB_PORT}")
     subscriber.setsockopt_string(zmq.SUBSCRIBE, "")
 
@@ -59,7 +59,7 @@ def main():
         state = json.loads(message)
         render_state(state)
 
-        move = input("Enter move: ").lower()
+        move = input("Enter move: ").lower().strip()
 
         if move == "q":
             sender.send_json({
@@ -74,6 +74,10 @@ def main():
                 "player_id": "human",
                 "direction": move
             })
+
+            message = subscriber.recv_string()
+            state = json.loads(message)
+            render_state(state)
 
 
 if __name__ == "__main__":
