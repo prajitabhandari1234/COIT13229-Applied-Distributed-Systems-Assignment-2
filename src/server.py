@@ -1,0 +1,68 @@
+import json
+import time
+import zmq
+from game import GameState, Player
+
+PULL_PORT = "5555"
+PUB_PORT = "5556"
+
+
+def main():
+    context = zmq.Context()
+
+    receiver = context.socket(zmq.PULL)
+    receiver.bind(f"tcp://*:{PULL_PORT}")
+
+    publisher = context.socket(zmq.PUB)
+    publisher.bind(f"tcp://*:{PUB_PORT}")
+
+    game = GameState()
+    game.add_player(Player("human", "Human", "H", 0, 0))
+    game.add_player(Player("bot1", "Bot 1", "B", 10, 10))
+    game.add_player(Player("bot2", "Bot 2", "C", 15, 15))
+
+    print("Server started.")
+    print(f"Receiving moves on port {PULL_PORT}")
+    print(f"Publishing game state on port {PUB_PORT}")
+
+    last_bot_move = time.time()
+
+    while True:
+        try:
+            message = receiver.recv_json(flags=zmq.NOBLOCK)
+            player_id = message.get("player_id")
+            direction = message.get("direction")
+
+            if direction in ["w", "a", "s", "d"]:
+                game.apply_move(player_id, direction)
+
+        except zmq.Again:
+            pass
+
+        if time.time() - last_bot_move > 1:
+            for bot_id in ["bot1", "bot2"]:
+                bot_move = game.get_bot_direction(bot_id)
+                game.apply_move(bot_id, bot_move)
+
+            last_bot_move = time.time()
+
+        state = {
+            "players": {
+                player_id: {
+                    "name": player.name,
+                    "symbol": player.symbol,
+                    "x": player.x,
+                    "y": player.y,
+                    "score": player.score,
+                }
+                for player_id, player in game.players.items()
+            },
+            "gold_positions": game.gold_positions,
+        }
+
+        publisher.send_string(json.dumps(state))
+        time.sleep(0.1)
+
+
+if __name__ == "__main__":
+    main()
