@@ -1,5 +1,5 @@
-import sys
 import os
+import sys
 import time
 
 sys.path.append(os.path.abspath("src"))
@@ -13,10 +13,10 @@ def test_lagged_move_still_applied():
     game.add_player(player)
 
     time.sleep(0.2)
-    game.apply_move("human", "d")
+    collected = game.apply_move("human", "d")
 
-    assert player.x == 6
-    assert player.y == 5
+    assert (player.x, player.y) == (6, 5)
+    assert collected in [True, False]
 
 
 def test_lost_message_simulation():
@@ -30,8 +30,7 @@ def test_lost_message_simulation():
     for move in delivered_moves:
         game.apply_move("human", move)
 
-    assert player.x == 6
-    assert player.y == 6
+    assert (player.x, player.y) == (6, 6)
     assert len(delivered_moves) < len(sent_moves)
 
 
@@ -45,8 +44,7 @@ def test_sequential_order_is_applied_correctly():
     for move in moves:
         game.apply_move("human", move)
 
-    assert player.x == 6
-    assert player.y == 6
+    assert (player.x, player.y) == (6, 6)
 
 
 def test_reordered_messages_can_change_result():
@@ -71,15 +69,22 @@ def test_reordered_messages_can_change_result():
     assert (player_one.x, player_one.y) != (player_two.x, player_two.y)
 
 
-def test_node_crash_manual_limitation():
-    """
-    Manual test:
-    1. Start server: python src/server.py
-    2. Start client: python src/client.py
-    3. Stop server using CTRL + C
-    4. Observe that client stops receiving game updates.
+def test_multiple_players_have_independent_positions():
+    game = GameState()
 
-    This prototype does not implement backup server recovery.
-    """
+    player_one = Player("p1", "Player 1", "H", 5, 5)
+    player_two = Player("p2", "Player 2", "J", 10, 10)
+
+    game.add_player(player_one)
+    game.add_player(player_two)
+
+    game.apply_move("p1", "d")
+    game.apply_move("p2", "s")
+
+    assert (player_one.x, player_one.y) == (6, 5)
+    assert (player_two.x, player_two.y) == (10, 11)
+
+
+def test_node_crash_manual_limitation():
     server_recovery_implemented = False
     assert server_recovery_implemented is False
