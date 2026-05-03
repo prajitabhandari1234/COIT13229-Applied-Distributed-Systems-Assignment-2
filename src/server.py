@@ -93,7 +93,10 @@ def main():
 
             elif direction in ["w", "a", "s", "d"]:
                 print(f"Move received: {player_id} -> {direction}")
-                game.apply_move(player_id, direction)
+                collected = game.apply_move(player_id, direction)
+
+                if collected:
+                    print(f"{player_id} collected gold!")
 
         except zmq.Again:
             pass

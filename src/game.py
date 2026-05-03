@@ -69,7 +69,7 @@ class GameState:
 
     def apply_move(self, player_id, direction):
         if player_id not in self.players:
-            return
+            return False
 
         player = self.players[player_id]
         player.move(direction)
@@ -78,6 +78,9 @@ class GameState:
             player.score += 1
             self.gold_positions.remove((player.x, player.y))
             self.gold_positions.append(self.random_empty_position())
+            return True
+
+        return False
 
     def get_bot_direction(self, bot_id):
         if bot_id not in self.players:
