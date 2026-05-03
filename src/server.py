@@ -27,7 +27,7 @@ def get_next_symbol(game):
     return "P"
 
 
-def game_to_state(game):
+def game_to_state(game, last_move_seq):
     return {
         "players": {
             player_id: {
@@ -43,6 +43,7 @@ def game_to_state(game):
         "gold_positions": game.gold_positions,
         "player_count": len(game.players),
         "max_players": MAX_PLAYERS,
+        "last_move_seq": last_move_seq,
     }
 
 
@@ -56,6 +57,7 @@ def main():
     publisher.bind(f"tcp://*:{PUB_PORT}")
 
     game = create_new_game()
+    last_move_seq = {}
 
     print("Server started.")
     print(f"Receiving moves on port {PULL_PORT}")
@@ -86,14 +88,20 @@ def main():
                         print(f"Player joined: {player_name} ({player_id})")
                     else:
                         print("Join rejected: maximum players reached")
+                last_move_seq[player_id] = 0
 
             elif action == "quit":
                 print(f"Player quit: {player_id}")
                 game.remove_player(player_id)
+                last_move_seq.pop(player_id, None)
 
             elif direction in ["w", "a", "s", "d"]:
-                print(f"Move received: {player_id} -> {direction}")
+                seq = message.get("seq", 0)
+
+                print(f"Move received: {player_id} -> {direction} seq={seq}")
                 collected = game.apply_move(player_id, direction)
+
+                last_move_seq[player_id] = seq
 
                 if collected:
                     print(f"{player_id} collected gold!")
@@ -109,7 +117,7 @@ def main():
 
             last_bot_move = time.time()
 
-        publisher.send_string(json.dumps(game_to_state(game)))
+        publisher.send_string(json.dumps(game_to_state(game, last_move_seq)))
         time.sleep(0.05)
 
 

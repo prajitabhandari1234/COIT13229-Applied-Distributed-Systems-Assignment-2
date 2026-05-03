@@ -49,7 +49,7 @@ class GameState:
         self.gold_positions = []
 
         while len(self.gold_positions) < GOLD_COUNT:
-            position = self.random_position()
+            position = self.random_empty_position()
             if position not in self.gold_positions:
                 self.gold_positions.append(position)
 

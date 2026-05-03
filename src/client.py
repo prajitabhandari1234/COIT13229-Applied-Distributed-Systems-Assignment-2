@@ -50,6 +50,15 @@ def render_state(state, my_player_id):
 
     print("\nControls: W/A/S/D then Enter | Q then Enter to quit")
 
+def wait_for_my_move(subscriber, player_id, seq):
+    while True:
+        message = subscriber.recv_string()
+        state = json.loads(message)
+
+        last_seq = state.get("last_move_seq", {}).get(player_id, 0)
+
+        if last_seq >= seq:
+            return state
 
 def main():
     context = zmq.Context()
@@ -76,6 +85,8 @@ def main():
 
     print("Connected to server. Waiting for game state...")
 
+    move_seq = 0
+    
     while True:
         message = subscriber.recv_string()
         state = json.loads(message)
@@ -93,10 +104,16 @@ def main():
 
         for key in move:
             if key in ["w", "a", "s", "d"]:
+                move_seq += 1
+
                 sender.send_json({
                     "player_id": player_id,
-                    "direction": key
+                    "direction": key,
+                    "seq": move_seq
                 })
+
+                state = wait_for_my_move(subscriber, player_id, move_seq)
+                render_state(state, player_id)
 
 
 if __name__ == "__main__":
