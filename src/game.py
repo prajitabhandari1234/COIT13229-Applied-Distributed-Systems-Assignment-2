@@ -65,24 +65,6 @@ class GameState:
             if position not in self.gold_positions and position not in occupied:
                 return position
 
-    def render(self):
-        grid = [["." for _ in range(GRID_SIZE)] for _ in range(GRID_SIZE)]
-
-        for x, y in self.gold_positions:
-            grid[y][x] = "$"
-
-        for player in self.players.values():
-            grid[player.y][player.x] = player.symbol
-
-        print("\n" * 3)
-        print("====== GOLD MINER ======")
-        for row in grid:
-            print(" ".join(row))
-
-        print("\nScores:")
-        for player in self.players.values():
-            print(f"{player.name}: {player.score}")
-
     def get_bot_direction(self, bot_id):
         bot = self.players[bot_id]
         if not self.gold_positions:
