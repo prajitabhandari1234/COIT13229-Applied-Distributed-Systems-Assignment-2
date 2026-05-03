@@ -1,5 +1,6 @@
 import json
 import os
+import uuid
 import zmq
 
 GRID_SIZE = 20
@@ -12,7 +13,7 @@ def clear_screen():
     os.system("cls" if os.name == "nt" else "clear")
 
 
-def render_state(state):
+def render_state(state, my_player_id):
     clear_screen()
 
     grid = [["." for _ in range(GRID_SIZE)] for _ in range(GRID_SIZE)]
@@ -20,10 +21,17 @@ def render_state(state):
     for x, y in state["gold_positions"]:
         grid[y][x] = "$"
 
-    for player in state["players"].values():
-        grid[player["y"]][player["x"]] = player["symbol"]
+    for player_id, player in state["players"].items():
+        symbol = player["symbol"]
 
-    print("====== GOLD MINER ======")
+        if player_id == my_player_id:
+            symbol = "H"
+
+        grid[player["y"]][player["x"]] = symbol
+
+    print("========== GOLD MINER ==========")
+    print(f'Players connected: {state["player_count"]}/{state["max_players"]}')
+    print("Your player is shown as: H")
     print("+" + "---" * GRID_SIZE + "+")
 
     for row in grid:
@@ -35,8 +43,9 @@ def render_state(state):
     print("+" + "---" * GRID_SIZE + "+")
 
     print("\nScores:")
-    for player in state["players"].values():
-        print(f'{player["name"]}: {player["score"]}')
+    for player_id, player in state["players"].items():
+        label = "YOU" if player_id == my_player_id else player["name"]
+        print(f'{label} ({player["symbol"]}): {player["score"]}')
 
     print("\nControls: W/A/S/D then Enter | Q then Enter to quit")
 
@@ -46,38 +55,47 @@ def main():
 
     sender = context.socket(zmq.PUSH)
     sender.connect(f"tcp://{SERVER_HOST}:{PUSH_PORT}")
-    
+
     subscriber = context.socket(zmq.SUB)
     subscriber.setsockopt(zmq.CONFLATE, 1)
     subscriber.connect(f"tcp://{SERVER_HOST}:{SUB_PORT}")
     subscriber.setsockopt_string(zmq.SUBSCRIBE, "")
+
+    player_id = str(uuid.uuid4())
+    player_name = input("Enter your player name: ").strip()
+
+    if player_name == "":
+        player_name = "Player"
+
+    sender.send_json({
+        "action": "join",
+        "player_id": player_id,
+        "name": player_name
+    })
 
     print("Connected to server. Waiting for game state...")
 
     while True:
         message = subscriber.recv_string()
         state = json.loads(message)
-        render_state(state)
+        render_state(state, player_id)
 
         move = input("Enter move: ").lower().strip()
 
         if move == "q":
             sender.send_json({
-                "player_id": "human",
-                "action": "quit"
+                "action": "quit",
+                "player_id": player_id
             })
             print("Client closed.")
             break
 
-        if move in ["w", "a", "s", "d"]:
-            sender.send_json({
-                "player_id": "human",
-                "direction": move
-            })
-
-            message = subscriber.recv_string()
-            state = json.loads(message)
-            render_state(state)
+        for key in move:
+            if key in ["w", "a", "s", "d"]:
+                sender.send_json({
+                    "player_id": player_id,
+                    "direction": key
+                })
 
 
 if __name__ == "__main__":
