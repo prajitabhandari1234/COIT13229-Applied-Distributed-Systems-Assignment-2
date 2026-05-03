@@ -24,14 +24,15 @@ def render_state(state, my_player_id):
     for player_id, player in state["players"].items():
         symbol = player["symbol"]
 
-        if player_id == my_player_id:
-            symbol = "H"
-
         grid[player["y"]][player["x"]] = symbol
 
     print("========== GOLD MINER ==========")
     print(f'Players connected: {state["player_count"]}/{state["max_players"]}')
-    print("Your player is shown as: H")
+    if my_player_id in state["players"]:
+        my_symbol = state["players"][my_player_id]["symbol"]
+        print(f"Your player is shown as: {my_symbol}")
+    else:
+        print("Waiting for server to add your player...")
     print("+" + "---" * GRID_SIZE + "+")
 
     for row in grid:
