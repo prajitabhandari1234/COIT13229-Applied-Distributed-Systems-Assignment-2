@@ -2,26 +2,30 @@ import random
 
 GRID_SIZE = 20
 GOLD_COUNT = 8
+MAX_PLAYERS = 100
 
 
 class Player:
-    def __init__(self, player_id, name, symbol, x, y):
+    def __init__(self, player_id, name, symbol, x, y, is_bot=False):
         self.player_id = player_id
         self.name = name
         self.symbol = symbol
         self.x = x
         self.y = y
         self.score = 0
+        self.is_bot = is_bot
 
     def move(self, direction):
-        if direction == "w" and self.y > 0:
-            self.y -= 1
-        elif direction == "s" and self.y < GRID_SIZE - 1:
-            self.y += 1
-        elif direction == "a" and self.x > 0:
-            self.x -= 1
-        elif direction == "d" and self.x < GRID_SIZE - 1:
-            self.x += 1
+        direction = direction.lower()
+
+        if direction == "w":
+            self.y = max(0, self.y - 1)
+        elif direction == "s":
+            self.y = min(GRID_SIZE - 1, self.y + 1)
+        elif direction == "a":
+            self.x = max(0, self.x - 1)
+        elif direction == "d":
+            self.x = min(GRID_SIZE - 1, self.x + 1)
 
 
 class GameState:
@@ -31,17 +35,37 @@ class GameState:
         self.create_gold()
 
     def add_player(self, player):
+        if len(self.players) >= MAX_PLAYERS:
+            return False
+
         self.players[player.player_id] = player
+        return True
+
+    def remove_player(self, player_id):
+        if player_id in self.players:
+            del self.players[player_id]
 
     def create_gold(self):
         self.gold_positions = []
+
         while len(self.gold_positions) < GOLD_COUNT:
-            position = (
-                random.randint(0, GRID_SIZE - 1),
-                random.randint(0, GRID_SIZE - 1),
-            )
+            position = self.random_position()
             if position not in self.gold_positions:
                 self.gold_positions.append(position)
+
+    def random_position(self):
+        return (
+            random.randint(0, GRID_SIZE - 1),
+            random.randint(0, GRID_SIZE - 1),
+        )
+
+    def random_empty_position(self):
+        while True:
+            position = self.random_position()
+            occupied = [(p.x, p.y) for p in self.players.values()]
+
+            if position not in self.gold_positions and position not in occupied:
+                return position
 
     def apply_move(self, player_id, direction):
         if player_id not in self.players:
@@ -55,18 +79,12 @@ class GameState:
             self.gold_positions.remove((player.x, player.y))
             self.gold_positions.append(self.random_empty_position())
 
-    def random_empty_position(self):
-        while True:
-            position = (
-                random.randint(0, GRID_SIZE - 1),
-                random.randint(0, GRID_SIZE - 1),
-            )
-            occupied = [(p.x, p.y) for p in self.players.values()]
-            if position not in self.gold_positions and position not in occupied:
-                return position
-
     def get_bot_direction(self, bot_id):
+        if bot_id not in self.players:
+            return random.choice(["w", "a", "s", "d"])
+
         bot = self.players[bot_id]
+
         if not self.gold_positions:
             return random.choice(["w", "a", "s", "d"])
 
@@ -87,34 +105,3 @@ class GameState:
             return "w"
 
         return random.choice(["w", "a", "s", "d"])
-
-
-def run_local_game():
-    game = GameState()
-
-    human = Player("human", "Human", "H", 0, 0)
-    bot1 = Player("bot1", "Bot 1", "B", 10, 10)
-    bot2 = Player("bot2", "Bot 2", "C", 15, 15)
-
-    game.add_player(human)
-    game.add_player(bot1)
-    game.add_player(bot2)
-
-    while True:
-        game.render()
-        move = input("Move with W/A/S/D or Q to quit: ").lower()
-
-        if move == "q":
-            print("Game ended.")
-            break
-
-        if move in ["w", "a", "s", "d"]:
-            game.apply_move("human", move)
-
-            for bot_id in ["bot1", "bot2"]:
-                bot_move = game.get_bot_direction(bot_id)
-                game.apply_move(bot_id, bot_move)
-
-
-if __name__ == "__main__":
-    run_local_game()
