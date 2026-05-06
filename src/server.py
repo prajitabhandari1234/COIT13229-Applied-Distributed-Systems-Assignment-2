@@ -109,7 +109,7 @@ def main():
         except zmq.Again:
             pass
 
-        if time.time() - last_bot_move > 5:
+        if time.time() - last_bot_move > 1:
             for bot_id in ["bot1", "bot2"]:
                 if bot_id in game.players:
                     bot_move = game.get_bot_direction(bot_id)
