@@ -2,7 +2,7 @@
 ## Gold Miner: Distributed Game
 
 **Student Name:** Prajita Bhandari  
-**Student ID:** 12255441
+**Student ID:** 12255441  
 **Unit:** COIT13229 Applied Distributed Systems  
 
 ---
@@ -30,10 +30,13 @@ The system demonstrates key distributed systems concepts such as **client-server
 
 The system uses a **client-server architecture** with a central sequencer server.
 
-- The **client** sends player moves to the server
-- The **server processes all moves in order**
-- The **server broadcasts updated game state to clients**
-- **Bots are simulated inside the server**
+- The **client sends player moves** to the server using PUSH
+- The **server processes all moves in arrival order**
+- The **server broadcasts updated game state** using PUB
+- **Bots are controlled inside the server**
+- Each move includes a **sequence number (seq)**
+- The server tracks **last_move_seq per player**
+- Clients wait until their move is processed before rendering
 
 ```
 Human Client ──PUSH──▶ Server (Sequencer) ──PUB──▶ All Clients
@@ -49,13 +52,14 @@ The system implements **Sequential Consistency**.
 
 - All moves are processed by a **single server**
 - Moves are applied in strict **arrival order**
+- The server defines the **global order of execution**
 - All clients receive updates in the same order
 - All players observe the **same game state**
 
 ### Trade-off:
 
 - Single point of failure (server)
-- No fault recovery implemented (prototype limitation)
+-  No crash recovery implemented (prototype limitation)
 
 ---
 
@@ -117,16 +121,27 @@ pytest
 ```
 
 ### Test Coverage
+Functional Testing
 
-| Test            | Description                  | Fault Type         |
-| --------------- | ---------------------------- | ------------------ |
-| Movement tests  | Player movement correctness  | None               |
-| Boundary tests  | Prevent moving outside grid  | None               |
-| Gold collection | Score increases correctly    | None               |
-| Lag simulation  | Delayed move still applied   | Network lag        |
-| Lost message    | Only delivered moves applied | Packet loss        |
-| Reordering test | Order affects final state    | Message reordering |
-| Node crash test | Documents limitation         | Server crash       |
+| Test Case         | Description                   | Expected Result                 |
+| ----------------- | ----------------------------- | ------------------------------- |
+| Movement tests    | Player movement correctness   | Position updates correctly      |
+| Boundary tests    | Prevent leaving grid          | Player stays within grid        |
+| Gold collection   | Collect gold                  | Score increases + gold respawns |
+| Max player test   | 100-player limit              | Extra players rejected          |
+| Bot movement test | Bot moves toward nearest gold | Correct direction selected      |
+| Gold respawn test | Gold appears after collection | New position generated          |
+
+Distributed Fault Testing
+| Test Case        | Description              | Expected Result                |
+| ---------------- | ------------------------ | ------------------------------ |
+| Lag simulation   | Delayed move applied     | Move still processed           |
+| Lost message     | Some moves dropped       | System continues correctly     |
+| Sequential order | Ordered execution        | Correct final state            |
+| Reordering test  | Different order of moves | Different result               |
+| Multi-user test  | Multiple players move    | Independent positions          |
+| Node crash test  | Server stops             | Client stops receiving updates |
+
 
 ---
 
@@ -144,13 +159,15 @@ These limitations are accepted for this prototype submission as permitted by the
 
 ## Fault Tolerance Discussion
 
-| Fault | Handling | How |
-|---|---|---|
-| Network lag | Accepted | Server accepts moves regardless of delay |
-| Lost messages | Partial Handling | Game continues with delivered moves; no retry |
-| Message reordering | Controlled | Sequential processing at server removes ordering issues |
-| Server crash | Not Handled | Documented limitation; no backup server implemented |
-| Bot disconnect | Not Handled | Session cannot recover; documented limitation |
+| Fault              | Handling    | Explanation                               |
+| ------------------ | ----------- | ----------------------------------------- |
+| Network lag        | Accepted    | Server processes delayed messages         |
+| Lost messages      | Partial     | Only delivered moves are applied          |
+| Message reordering | Controlled  | Server enforces sequential consistency    |
+| Client timeout     | Handled     | Client detects failure using ZMQ RCVTIMEO |
+| Server crash       | Not handled | System stops (no recovery implemented)    |
+| Bot disconnect     | Not handled | No restart/rejoin support                 |
+
 
 ---
 
