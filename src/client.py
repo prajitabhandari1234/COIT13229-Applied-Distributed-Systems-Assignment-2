@@ -23,16 +23,17 @@ def render_state(state, my_player_id):
 
     for player_id, player in state["players"].items():
         symbol = player["symbol"]
-
         grid[player["y"]][player["x"]] = symbol
 
     print("========== GOLD MINER ==========")
     print(f'Players connected: {state["player_count"]}/{state["max_players"]}')
+
     if my_player_id in state["players"]:
         my_symbol = state["players"][my_player_id]["symbol"]
         print(f"Your player is shown as: {my_symbol}")
     else:
         print("Waiting for server to add your player...")
+
     print("+" + "---" * GRID_SIZE + "+")
 
     for row in grid:
@@ -50,15 +51,29 @@ def render_state(state, my_player_id):
 
     print("\nControls: W/A/S/D then Enter | Q then Enter to quit")
 
+
+def receive_state(subscriber):
+    try:
+        message = subscriber.recv_string()
+        return json.loads(message)
+
+    except zmq.Again:
+        print("Server not responding — possible crash or network lag.")
+        return None
+
+
 def wait_for_my_move(subscriber, player_id, seq):
     while True:
-        message = subscriber.recv_string()
-        state = json.loads(message)
+        state = receive_state(subscriber)
+
+        if state is None:
+            return None
 
         last_seq = state.get("last_move_seq", {}).get(player_id, 0)
 
         if last_seq >= seq:
             return state
+
 
 def main():
     context = zmq.Context()
@@ -67,7 +82,7 @@ def main():
     sender.connect(f"tcp://{SERVER_HOST}:{PUSH_PORT}")
 
     subscriber = context.socket(zmq.SUB)
-    subscriber.setsockopt(zmq.CONFLATE, 1)
+    subscriber.setsockopt(zmq.RCVTIMEO, 3000)
     subscriber.connect(f"tcp://{SERVER_HOST}:{SUB_PORT}")
     subscriber.setsockopt_string(zmq.SUBSCRIBE, "")
 
@@ -86,10 +101,13 @@ def main():
     print("Connected to server. Waiting for game state...")
 
     move_seq = 0
-    
+
     while True:
-        message = subscriber.recv_string()
-        state = json.loads(message)
+        state = receive_state(subscriber)
+
+        if state is None:
+            continue
+
         render_state(state, player_id)
 
         move = input("Enter move: ").lower().strip()
@@ -113,6 +131,11 @@ def main():
                 })
 
                 state = wait_for_my_move(subscriber, player_id, move_seq)
+
+                if state is None:
+                    print("Skipping render because no game state was received.")
+                    continue
+
                 render_state(state, player_id)
 
 
