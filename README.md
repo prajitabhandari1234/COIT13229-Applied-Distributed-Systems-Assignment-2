@@ -65,17 +65,42 @@ The system implements **Sequential Consistency**.
 
 ## Project Structure
 
-```
+```text
 gold-miner/
+├── docs/                         # Assignment documentation
+├── plantuml code/                # PlantUML source files
+│   ├── architectureDiagram.puml
+│   ├── classDiagram.puml
+│   ├── deploymentDiagram.puml
+│   ├── faultSequenceDiagram.puml
+│   └── sequenceDiagram.puml
+│
+├── Screenshots/                  # Runtime and testing screenshots
+│   ├── client-gameplay.png
+│   ├── fault-handling.png
+│   ├── multi-client-sync.png
+│   ├── pytest-results.png
+│   ├── server-running.png
+│   └── server-move-log-stopped.png
+│
+├── System Design Diagram/        # Exported PNG diagrams
+│   ├── Architecture Diagram.png
+│   ├── Class Diagram.png
+│   ├── Deployment Diagram.png
+│   ├── Fault Sequence Diagram.png
+│   └── Sequence Diagram.png
+│
 ├── src/
-│   ├── server.py        # Central sequencer — handles bots and moves
-│   ├── client.py        # Human player client
-│   └── game.py          # Game logic
+│   ├── server.py                 # Sequencer server
+│   ├── client.py                 # Human player client
+│   └── game.py                   # Shared game logic
+│
 ├── tests/
-│   ├── test_game.py     # Core game logic tests (movement, gold collection)
-│   └── test_faults.py   # Distributed fault simulation tests
-├── requirements.txt
-└── README.md
+│   ├── test_game.py              # Functional game tests
+│   └── test_faults.py            # Distributed fault tolerance tests
+│
+├── requirements.txt              # Python dependencies
+└── README.md                     # Project documentation
 ```
 
 ---
