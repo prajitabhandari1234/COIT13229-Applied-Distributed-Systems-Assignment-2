@@ -1,0 +1,30 @@
+@startuml
+title Gold Miner Deployment Diagram
+
+skinparam shadowing false
+skinparam componentStyle rectangle
+left to right direction
+
+node "Client Machine" as Client {
+  component "client.py\nHuman Player Client" as C
+}
+
+node "Server Machine" as Server {
+  component "server.py\nSequencer Server" as S
+  component "game.py\nGame Logic" as G
+  component "Bot AI\nServer Controlled" as B
+}
+
+C --> S : sends moves\nZMQ PUSH
+S --> C : broadcasts game state\nZMQ PUB
+
+S --> G : applies moves\nupdates scores
+S --> B : controls bots
+B --> G : bot movement
+
+note bottom of Server
+The server stores the authoritative game state.
+Clients only send input and render updates.
+end note
+
+@enduml
