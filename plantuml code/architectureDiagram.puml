@@ -1,0 +1,42 @@
+@startuml
+title Gold Miner Client-Server Architecture
+
+skinparam componentStyle rectangle
+skinparam shadowing false
+
+node "Client Machine 1" {
+  component "client.py\nHuman Player 1" as C1
+}
+
+node "Client Machine 2" {
+  component "client.py\nHuman Player 2" as C2
+}
+
+node "Client Machine 3" {
+  component "client.py\nHuman Player 3" as C3
+}
+
+node "Server Machine" {
+  component "server.py\nSequencer Server" as S
+  component "game.py\nGame Logic" as G
+  component "Bot AI (Server Controlled)" as B
+}
+
+C1 --> S : PUSH moves
+C2 --> S : PUSH moves
+C3 --> S : PUSH moves
+
+S --> C1 : PUB game state
+S --> C2 : PUB game state
+S --> C3 : PUB game state
+
+S --> G : apply moves & update scores
+S --> B : control bots
+B --> G : bot moves
+
+note bottom of S
+Server processes all moves in arrival order.
+This supports sequential consistency.
+end note
+
+@enduml
