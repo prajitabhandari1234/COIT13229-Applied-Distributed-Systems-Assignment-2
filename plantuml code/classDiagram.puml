@@ -1,0 +1,32 @@
+@startuml
+title Gold Miner Class Diagram
+
+skinparam classAttributeIconSize 0
+left to right direction
+
+class GameState {
+  - players : dict
+  - gold_positions : list
+  --
+  + add_player(player : Player) : boolean
+  + remove_player(player_id : string) : void
+  + apply_move(player_id : string, direction : string) : boolean
+  + get_bot_direction(bot_id : string) : string
+  + random_empty_position() : tuple
+}
+
+class Player {
+  - player_id : string
+  - name : string
+  - symbol : string
+  - x : int
+  - y : int
+  - score : int
+  - is_bot : boolean
+  --
+  + move(direction : string) : void
+}
+
+GameState "1" --> "0..100" Player : contains
+
+@enduml
