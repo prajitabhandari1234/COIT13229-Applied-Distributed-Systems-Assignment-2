@@ -1,32 +1,48 @@
 @startuml
+skinparam classBackgroundColor #FFFFFF
+skinparam classBorderColor #888780
+skinparam roundcorner 8
+
 title Gold Miner Class Diagram
 
-skinparam classAttributeIconSize 0
-left to right direction
+class Server {
+  +game: GameState
+  +last_move_seq: dict
+  +main()
+  +game_to_state(): dict
+}
 
 class GameState {
-  - players : dict
-  - gold_positions : list
-  --
-  + add_player(player : Player) : boolean
-  + remove_player(player_id : string) : void
-  + apply_move(player_id : string, direction : string) : boolean
-  + get_bot_direction(bot_id : string) : string
-  + random_empty_position() : tuple
+  -players: dict
+  -gold_positions: list
+  +add_player(player: Player): boolean
+  +remove_player(player_id: string): void
+  +apply_move(player_id: string, direction: string): boolean
+  +get_bot_direction(bot_id: string): string
+  +create_gold(): void
+  +random_empty_position(): tuple
+}
+
+class Client {
+  +player_id: str
+  +move_seq: int
+  +render_state(state)
+  +receive_state(sub)
+  +wait_for_my_move()
 }
 
 class Player {
-  - player_id : string
-  - name : string
-  - symbol : string
-  - x : int
-  - y : int
-  - score : int
-  - is_bot : boolean
-  --
-  + move(direction : string) : void
+  -player_id: string
+  -name: string
+  -symbol: string
+  -x: int
+  -y: int
+  -score: int
+  -is_bot: boolean
+  +move(direction: string): void
 }
 
-GameState "1" --> "0..100" Player : contains
-
+Server --> GameState : uses
+GameState "1" o-- "0..100" Player : contains
+Client ..> Player : sends moves for
 @enduml
