@@ -1,0 +1,39 @@
+@startuml
+skinparam sequenceArrowThickness 1.5
+skinparam roundcorner 6
+skinparam noteBackgroundColor #FFFFF0
+skinparam noteBorderColor #BA7517
+
+title Fault sequence — server crash
+
+actor "Player" as P
+participant "Client\nclient.py" as C
+participant "Server\nserver.py" as S
+
+P -> C : press movement key (W/A/S/D)
+C -> S : PUSH {player_id, direction, seq=1}
+S --> C : PUB game state (seq=1 confirmed)
+C -> C : render_state()
+
+note over S #FF9999
+  SERVER CRASH
+  (process killed or network lost)
+end note
+
+C -> S : PUSH {direction, seq=2}
+note right of C
+  no response from server
+end note
+
+C -> C : wait_for_my_move()\nblocks on SUB recv
+C -> C : RCVTIMEO 3000 ms expires
+C -> C : print "Server not responding\n— possible crash or network lag"
+C -> C : return None\nclient halts input loop
+
+note over C, S
+  Known prototype limitation:
+  No reconnect or crash recovery.
+  Server state (scores, positions)
+  is lost. All clients must rejoin.
+end note
+@enduml
