@@ -1,0 +1,39 @@
+@startuml
+skinparam sequenceArrowThickness 1.5
+skinparam roundcorner 6
+skinparam noteBackgroundColor #FFFFF0
+skinparam noteBorderColor #BA7517
+
+title Fault sequence — network lag and message reorder
+
+participant "Client\nclient.py" as C
+participant "Network\n(lagged)" as N
+participant "Server\nserver.py" as S
+
+C -> N : PUSH {direction: d, seq=1}  — sent first
+C -> N : PUSH {direction: s, seq=2}  — sent second
+
+note over N #FFD580
+  Network lag delays seq=1.
+  seq=2 arrives at server first.
+end note
+
+N -> S : seq=2 arrives FIRST
+S -> S : apply_move(s)\nlast_move_seq[id] = 2
+
+N -> S : seq=1 arrives SECOND
+S -> S : apply_move(d)\nlast_move_seq[id] = 1
+
+S --> C : PUB state after seq=2 applied
+S --> C : PUB state after seq=1 applied
+
+C -> C : wait_for_my_move(seq=2)\nlast_seq >= 2 confirmed
+
+note over C, S
+  Result: moves applied in arrival order,
+  not send order. Final player position
+  differs from intended sequence.
+  Demonstrates reorder vulnerability.
+  Prototype does not correct this.
+end note
+@enduml
