@@ -1,0 +1,30 @@
+@startuml
+left to right direction
+skinparam actorStyle awesome
+skinparam usecaseBackgroundColor #FFFFFF
+skinparam usecaseBorderColor #888780
+skinparam roundcorner 8
+
+title Gold Miner System — Use Case Diagram
+
+actor "Human player" as H
+actor "Bot AI" as B
+
+rectangle "Gold Miner System" {
+  usecase "Join game" as UC1
+  usecase "Exit game" as UC2
+  usecase "Collect gold" as UC3
+  usecase "Move player" as UC4
+  usecase "View game state" as UC5
+}
+
+H --> UC1
+H --> UC2
+H --> UC3
+H --> UC4
+H --> UC5
+
+B --> UC3
+B --> UC4
+B --> UC5
+@enduml
