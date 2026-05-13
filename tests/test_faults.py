@@ -58,24 +58,22 @@ def test_reordered_messages_can_change_result():
     game_one = GameState()
     game_two = GameState()
 
-    player_one = Player("human", "Human", "H", 0, 0)
-    player_two = Player("human", "Human", "H", 0, 0)
+    player_one = Player("p1", "Human", "H", 5, 5)
+    player_two = Player("p2", "Human", "H", 5, 5)
 
     game_one.add_player(player_one)
     game_two.add_player(player_two)
 
-    # Same move set, but different ordering
-    order_one = ["d", "s", "a"]
-    order_two = ["a", "d", "s"]
+    game_one.gold_positions = [(6, 5)]
+    game_two.gold_positions = [(6, 5)]
 
-    for move in order_one:
-        game_one.apply_move("human", move)
+    for move in ["d", "s", "a"]:
+        game_one.apply_move("p1", move)
 
-    for move in order_two:
-        game_two.apply_move("human", move)
+    for move in ["s", "d", "a"]:
+        game_two.apply_move("p2", move)
 
-    assert (player_one.x, player_one.y) != (player_two.x, player_two.y)
-
+    assert player_one.score != player_two.score
 
 # Test that multiple players maintain independent positions
 def test_multiple_players_have_independent_positions():
