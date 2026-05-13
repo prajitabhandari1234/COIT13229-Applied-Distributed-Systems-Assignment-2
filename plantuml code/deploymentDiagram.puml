@@ -1,30 +1,48 @@
 @startuml
-title Gold Miner Deployment Diagram
+skinparam roundcorner 8
+skinparam nodeBackgroundColor #FFFFFF
+skinparam nodeBorderColor #888780
+skinparam componentBackgroundColor #FFFFFF
+skinparam componentBorderColor #888780
+skinparam noteBackgroundColor #FFFFF0
+skinparam noteBorderColor #BA7517
 
-skinparam shadowing false
-skinparam componentStyle rectangle
-left to right direction
+title Gold Miner — Deployment Diagram
 
-node "Client Machine" as Client {
-  component "client.py\nHuman Player Client" as C
+node "Client Machine 1\n(Human player)" as CM1 {
+  component "client.py\nHuman Player 1" as C1
 }
 
-node "Server Machine" as Server {
-  component "server.py\nSequencer Server" as S
-  component "game.py\nGame Logic" as G
-  component "Bot AI\nServer Controlled" as B
+node "Client Machine 2\n(Human player)" as CM2 {
+  component "client.py\nHuman Player 2" as C2
 }
 
-C --> S : sends moves\nZMQ PUSH
-S --> C : broadcasts game state\nZMQ PUB
+node "Client Machine 3\n(Human player)" as CM3 {
+  component "client.py\nHuman Player 3" as C3
+}
 
-S --> G : applies moves\nupdates scores
-S --> B : controls bots
-B --> G : bot movement
+node "Server Machine\n(Sequencer node)" as SM {
+  component "server.py\nSequencer Server" as SRV
+  component "Bot AI\n(Server Controlled)" as BOT
+  component "game.py\nGame Logic" as GAME
 
-note bottom of Server
-The server stores the authoritative game state.
-Clients only send input and render updates.
+  SRV --> BOT : controls bots
+  SRV --> GAME : apply moves\n& update scores
+  BOT --> GAME : bot moves
+}
+
+C1 --> SRV : PUSH moves\n(ZMQ PUSH :5555)
+C2 --> SRV : PUSH moves\n(ZMQ PUSH :5555)
+C3 --> SRV : PUSH moves\n(ZMQ PUSH :5555)
+
+SRV ..> C1 : PUB game state\n(ZMQ PUB :5556)
+SRV ..> C2 : PUB game state\n(ZMQ PUB :5556)
+SRV ..> C3 : PUB game state\n(ZMQ PUB :5556)
+
+note right of SM
+  Server processes all moves in arrival order.
+  This supports sequential consistency.
+  Single point of authority for
+  all game state mutations.
 end note
-
 @enduml
