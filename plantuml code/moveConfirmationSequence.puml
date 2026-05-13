@@ -1,0 +1,42 @@
+@startuml
+skinparam sequenceArrowThickness 1.5
+skinparam roundcorner 6
+skinparam noteBackgroundColor #FFFFF0
+skinparam noteBorderColor #BA7517
+
+title Gold Miner — Move Confirmation Sequence Diagram
+
+participant "Client\nclient.py" as C
+participant "Server\nserver.py" as S
+participant "GameState\ngame.py" as G
+participant "Other clients" as O
+
+C -> S : PUSH {player_id, direction, seq=N}
+
+activate S
+S -> G : apply_move(id, dir)
+activate G
+G --> S : return updated state
+deactivate G
+
+S -> S : check gold collected?
+S -> S : last_move_seq[id] = N
+
+S --> C : PUB game_state (last_move_seq)
+S --> O : PUB game_state
+deactivate S
+
+loop [wait_for_my_move()]
+  C -> C : last_move_seq[id] >= N?
+end
+
+C -> C : render_state()
+O -> O : render_state()
+
+note over C, O
+  Sequential consistency:
+  All clients render same state
+  from same PUB broadcast.
+  Client blocks until seq confirmed.
+end note
+@enduml
