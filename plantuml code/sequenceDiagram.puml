@@ -1,42 +1,44 @@
 @startuml
+skinparam sequenceArrowThickness 1.5
+skinparam roundcorner 6
+skinparam noteBackgroundColor #FFFFF0
+skinparam noteBorderColor #BA7517
+
 title Gold Miner Sequential Consistency Sequence Diagram
 
 actor "Player" as P
 participant "Client\nclient.py" as C
 participant "Server\nserver.py\nSequencer" as S
 participant "GameState\ngame.py" as G
-participant "All Clients" as AC
+participant "All Clients" as O
 
 P -> C : Press movement key\n(W/A/S/D)
 
-note right of C
-Each move gets a unique
-sequence number (seq)
+note over C
+  Each move gets a unique
+  sequence number (seq)
 end note
 
 C -> S : PUSH move request\n(player_id, direction, seq)
 
-note right of S
-Server processes moves
-in arrival order
-(sequential consistency)
+note over S
+  Server processes moves
+  in arrival order
+  (sequential consistency)
 end note
 
 S -> G : apply_move(player_id, direction)
 G --> S : return updated state
-
 S -> S : update last_move_seq[player_id]
 
-S -> AC : PUB updated game state\n+ last_move_seq
+S --> O : PUB updated game state\n+ last_move_seq
+S --> C : receive PUB updated game state\n+ last_move_seq
 
-AC --> C : receive PUB updated game state+ last_move_seq
 C -> C : wait_for_my_move(seq)\n(wait until processed)
-
 C -> C : render confirmed game state
 
-note right of AC
-All clients receive updates
-in the same order.
+note over O
+  All clients receive updates
+  in the same order.
 end note
-
 @enduml
