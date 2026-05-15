@@ -207,3 +207,6 @@ These limitations are accepted for this prototype submission as permitted by the
 ## Repository
 
 Repo link here: [https://github.com/prajitabhandari1234/COIT13229-Applied-Distributed-Systems-Assignment-2]
+
+## Video
+Video link here: [ Assignment 2.mp4]
