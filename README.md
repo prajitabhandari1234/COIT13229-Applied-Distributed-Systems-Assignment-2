@@ -209,6 +209,7 @@ These limitations are accepted for this prototype submission as permitted by the
 Repo link here: [https://github.com/prajitabhandari1234/COIT13229-Applied-Distributed-Systems-Assignment-2]
 
 ## Video
-Video link here: [https://cqu365-my.sharepoint.com.mcas.ms/my?id=%2Fpersonal%2Fprajita%5Fbhandari%5Fcqumail%5Fcom%2FDocuments%2FTerm%205%2FCOIT1329%28Applied%20Distributed%20Systems%29&viewid=759dbdb5%2D9249%2D49e8%2Da8f2%2Dcb2ce8eff24a]
+Video link here: [https://cqu365-my.sharepoint.com/:v:/g/personal/prajita_bhandari_cqumail_com/IQAXLTlFPh0mRajgeGwIN4feAVIUAGyS0Ozwu3ZswsAoyMY?nav=eyJyZWZlcnJhbEluZm8iOnsicmVmZXJyYWxBcHAiOiJPbmVEcml2ZUZvckJ1c2luZXNzIiwicmVmZXJyYWxBcHBQbGF0Zm9ybSI6IldlYiIsInJlZmVycmFsTW9kZSI6InZpZXciLCJyZWZlcnJhbFZpZXciOiJNeUZpbGVzTGlua0NvcHkifX0&e=qeog2U]
+
 
 
