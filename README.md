@@ -1,4 +1,3 @@
-# COIT13229 Applied Distributed Systems — Assignment 2
 ## Gold Miner: Distributed Game
 
 **Student Name:** Prajita Bhandari  
